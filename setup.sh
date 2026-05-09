@@ -1,6 +1,18 @@
 #!/bin/bash
 
-USER_NAME=nornad
+USER_NAME=$1
+SSH_CONFIG_TYPE=${2:-""}
+
+if [ -z "$USER_NAME" ]; then
+    echo "ERROR: You must specify user name"
+    exit 1
+fi
+
+if [ -z "$SSH_CONFIG_TYPE" ]; then
+  SSH_CONFIG_FILE="00-init.conf"
+else
+  SSH_CONFIG_FILE="00-$SSH_CONFIG_TYPE-init.conf"
+fi
 
 echo "---------- Update system..."
 apt update && apt upgrade -y
@@ -18,17 +30,24 @@ useradd -m -s /bin/bash $USER_NAME
 USER_HOME=$(getent passwd $USER_NAME | cut -d: -f6)
 
 echo "---------- Add user public key..."
-echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIANF51V87bIk6BdL1S/LXpycZpS5hy5UpERlc0Otl/C7 nornad" >> $USER_HOME/.ssh/authorized_keys
+mkdir -p "$USER_HOME/.ssh"
+chmod 700 "$USER_HOME/.ssh"
+PUBLIC_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIANF51V87bIk6BdL1S/LXpycZpS5hy5UpERlc0Otl/C7 nornad"
+grep -qxF "$PUBLIC_KEY" "$USER_HOME/.ssh/authorized_keys" || echo "$PUBLIC_KEY" >> "$USER_HOME/.ssh/authorized_keys"
+chmod 600 "$USER_HOME/.ssh/authorized_keys"
+chown -R "$USER_NAME:$USER_NAME" "$USER_HOME/.ssh"
 
 echo "---------- Install Oh-my-zsh..."
 sudo -u $USER_NAME sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh) --unattended"
 echo "---------- Update system..."
-sudo -u $USER_NAME curl -fL -o $USER_HOME/.zshrc https://raw.githubusercontent.com/nornad/dotfiles/main/zsh/.zshrc
+sudo -u $USER_NAME curl -fL -o "$USER_HOME/.zshrc https://raw.githubusercontent.com/nornad/dotfiles/main/zsh/.zshrc"
 chsh -s $(which zsh) $USER_NAME
 
 echo "---------- Configure SSH..."
-curl -fL -o /etc/ssh/sshd_config https://raw.githubusercontent.com/nornad/dotfiles/main/ssh/sshd_config
-chmod 644 /etc/ssh/sshd_config
+
+curl -fL -o "/etc/ssh/sshd_config.d/$SSH_CONFIG_FILE" "https://raw.githubusercontent.com/nornad/dotfiles/main/ssh/$SSH_CONFIG_FILE"
+chmod 644 "/etc/ssh/sshd_config.d/$SSH_CONFIG_FILE"
+sshd -t
 
 echo "---------- Configure Fail2Ban..."
 curl -fL -o /etc/fail2ban/jail.local https://raw.githubusercontent.com/nornad/dotfiles/main/fail2ban/jail.local
