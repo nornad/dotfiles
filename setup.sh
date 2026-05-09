@@ -41,6 +41,7 @@ echo "---------- Install Oh-my-zsh..."
 sudo -u $USER_NAME sh -c "cd $USER_HOME && $(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 echo "---------- Update zsh..."
 sudo -u $USER_NAME curl -fL -o "$USER_HOME/.zshrc" "https://raw.githubusercontent.com/nornad/dotfiles/main/zsh/.zshrc"
+sudo -u $USER_NAME git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$USER_HOME/.oh-my-zsh/custom/themes/powerlevel10k"
 chsh -s $(which zsh) $USER_NAME
 
 echo "---------- Configure SSH..."
@@ -55,9 +56,12 @@ systemctl restart fail2ban
 sleep 5
 fail2ban-client status sshd
 
-echo ""
-echo "Setup completed. Please check all one more time, exit and log in again."
+echo "-----------------------------------------------------------------------------------------"
+echo "---------- Setup completed"
+echo "Please check all one more time, exit and log in again."
 echo "Don't forget to add your white IP to fail2ban ignore:"
 echo "    sudo mcedit /etc/fail2ban/jail.local"
 echo "...and then restart fail2ban with"
 echo "    systemctl restart fail2ban"
+echo "Restart sshd when you checked all TWICE and ready to go"
+echo "    
