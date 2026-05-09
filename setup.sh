@@ -38,13 +38,12 @@ chmod 600 "$USER_HOME/.ssh/authorized_keys"
 chown -R "$USER_NAME:$USER_NAME" "$USER_HOME/.ssh"
 
 echo "---------- Install Oh-my-zsh..."
-sudo -u $USER_NAME sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh) --unattended"
-echo "---------- Update system..."
-sudo -u $USER_NAME curl -fL -o "$USER_HOME/.zshrc https://raw.githubusercontent.com/nornad/dotfiles/main/zsh/.zshrc"
+sudo -u $USER_NAME sh -c "cd $USER_HOME && $(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+echo "---------- Update zsh..."
+sudo -u $USER_NAME curl -fL -o "$USER_HOME/.zshrc" "https://raw.githubusercontent.com/nornad/dotfiles/main/zsh/.zshrc"
 chsh -s $(which zsh) $USER_NAME
 
 echo "---------- Configure SSH..."
-
 curl -fL -o "/etc/ssh/sshd_config.d/$SSH_CONFIG_FILE" "https://raw.githubusercontent.com/nornad/dotfiles/main/ssh/$SSH_CONFIG_FILE"
 chmod 644 "/etc/ssh/sshd_config.d/$SSH_CONFIG_FILE"
 sshd -t
@@ -53,10 +52,12 @@ echo "---------- Configure Fail2Ban..."
 curl -fL -o /etc/fail2ban/jail.local https://raw.githubusercontent.com/nornad/dotfiles/main/fail2ban/jail.local
 chmod 644 /etc/fail2ban/jail.local
 systemctl restart fail2ban
+sleep 5
 fail2ban-client status sshd
 
+echo ""
 echo "Setup completed. Please check all one more time, exit and log in again."
 echo "Don't forget to add your white IP to fail2ban ignore:"
-echo "\tsudo mcedit /etc/fail2ban/jail.local"
+echo "    sudo mcedit /etc/fail2ban/jail.local"
 echo "...and then restart fail2ban with"
-echo "\tsystemctl restart fail2ban"
+echo "    systemctl restart fail2ban"
