@@ -1,0 +1,12 @@
+[DEFAULT]
+# Список IP через пробел, которые нельзя банить
+# ignoreip = 127.0.0.1/8 ::1 ВАШ_ВНЕШНИЙ_IP
+
+[sshd]
+enabled = true
+port    = 22
+logpath = %(sshd_log)s
+backend = %(sshd_backend)s
+maxretry = 2
+bantime  = 1w
+findtime = 24h
